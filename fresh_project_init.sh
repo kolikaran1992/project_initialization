@@ -44,6 +44,7 @@ from pathlib import Path
 from datetime import datetime
 import os
 import pytz
+import logging
 from dynaconf import Dynaconf
 
 
@@ -71,12 +72,9 @@ config = Dynaconf(
     preload=[_BASE_DIR.joinpath("settings_file", "settings.toml").as_posix()],
     settings_files=[],
     secrets=[] if not secrets_dir else list(Path(secrets_dir).glob("*.toml")),
-    # to enable overriding of single variables at runtime
     environments=True,
     envvar_prefix="EXP_BASE",
-    # to enable merging of user defined and base settings
     load_dotenv=True,
-    # jinja variables
     _get_now_ts=_get_now_ts,
     _get_now_iso=_get_now_iso,
     _get_start_ts=_get_start_ts,
@@ -86,6 +84,35 @@ config = Dynaconf(
     home_dir=Path.home().as_posix(),
     merge_enabled=True,
 )
+
+#########################
+# Logger Initialization #
+#########################
+class DefaultFormatter(logging.Formatter):
+    def __init__(self, fmt=None, datefmt=None):
+        super().__init__(fmt=fmt, datefmt=datefmt)
+
+    def formatTime(self, record, datefmt=None):
+        dt = datetime.fromtimestamp(record.created, pytz.timezone(config.get("tz")))
+        if datefmt:
+            return dt.strftime(datefmt)
+        return dt.isoformat()
+
+    def format(self, record):
+        record.full_path = record.pathname
+        return super().format(record)
+
+
+logger = logging.getLogger(config.logger_name)
+logger.setLevel(logging.INFO)
+
+fmt = "[%(asctime)s] %(levelname)s [%(full_path)s]: %(message)s"
+formatter = DefaultFormatter(fmt=fmt)
+
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logger.level)
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
 EOF
 
 # STEP 6 — Create settings_file inside project directory
@@ -96,6 +123,7 @@ cat <<EOF > "$PROJECT_NAME/settings_file/settings.toml"
 now_iso = "@jinja {{this._get_now_iso(this.tz)}}"
 start_ts = "@jinja {{this._get_start_ts(this.tz)}}"
 tz = "Asia/Kolkata"
+logger_name = "$PROJECT_NAME"
 EOF
 
 
@@ -131,10 +159,19 @@ project_root/
 - Loads \`settings.toml\`
 - Injects useful Jinja variables (\`now\`, timezone helpers)
 - Sets base paths and timestamp values
+- ✅ Initializes a global logger available across the project
+
+To log messages:
+
+\`\`\`python
+from <project_name>.omniconf import logger
+logger.info("This is a log message")
+\`\`\`
 
 ### \`settings_file/settings.toml\`
 - Contains default configuration values
 - Uses Jinja2 templating inside Dynaconf
+- Includes logger_name which is set to the project root name
 
 Example:
 \`\`\`
@@ -142,6 +179,7 @@ Example:
 now_iso = "@jinja {{this._get_now_iso(this.tz)}}"
 start_ts = "@jinja {{this._get_start_ts(this.tz)}}"
 tz = "Asia/Kolkata"
+logger_name = "$PROJECT_NAME"
 \`\`\`
 
 If an AI agent needs to modify configuration behavior, it should edit:
@@ -163,3 +201,4 @@ echo "- README.md"
 echo "- $PROJECT_NAME/__init__.py"
 echo "- $PROJECT_NAME/omniconf.py"
 echo "- $PROJECT_NAME/settings_file/settings.toml"
+echo "- agent.md"
