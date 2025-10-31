@@ -146,7 +146,7 @@ project_root/
 ├── settings_file/ # Directory holding main Dynaconf settings
 │ └── settings.toml # Default settings loaded by omniconf
 │
-├── <project_name>/ # Main Python package
+├── $PROJECT_NAME/ # Main Python package
 │ └── __init__.py
 │
 └── tests/ # Pytest test directory
@@ -164,7 +164,7 @@ project_root/
 To log messages:
 
 \`\`\`python
-from <project_name>.omniconf import logger
+from $PROJECT_NAME.omniconf import logger
 logger.info("This is a log message")
 \`\`\`
 
@@ -188,7 +188,7 @@ If an AI agent needs to modify configuration behavior, it should edit:
 
 ## 🔧 Extending the Project
 - Add new settings in \`settings_file/settings.toml\`
-- Add new Python modules inside \`<project_name>/\`
+- Add new Python modules inside \`$PROJECT_NAME/\`
 - Add tests inside \`tests/\`
 EOF
 
