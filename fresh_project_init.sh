@@ -148,21 +148,21 @@ It provides a clean structure for configuration management using Dynaconf, along
 \`\`\`
 project_root/
 │
-├── pyproject.toml # Poetry configuration & dependencies
-├── README.md # Documentation for humans & LLM agents
-├── omniconf.py # Base configuration loader using Dynaconf
-├── settings_file/ # Directory holding main Dynaconf settings
-│ └── settings.toml # Default settings loaded by omniconf
+├── pyproject.toml               # Poetry configuration & dependencies
+├── README.md                    # Project documentation
 │
-├── $PROJECT_NAME/ # Main Python package
-│ └── __init__.py
+├── $PROJECT_NAME/               # Main Python package
+│   ├── __init__.py
+│   ├── omniconf.py              # Base configuration loader using Dynaconf
+│   └── settings_file/           # Dynaconf settings directory
+│       └── settings.toml        # Default configuration
 │
-└── tests/ # Pytest test directory
+└── tests/                       # Unit tests directory
 \`\`\`
 
 ## ✅ What Each File Does
 
-### \`omniconf.py\`
+### \`$PROJECT_NAME/omniconf.py\`
 - Central config loader for the entire project
 - Loads \`settings.toml\`
 - Injects useful Jinja variables (\`now\`, timezone helpers)
@@ -176,25 +176,27 @@ from $PROJECT_NAME.omniconf import logger
 logger.info("This is a log message")
 \`\`\`
 
-### \`settings_file/settings.toml\`
+### \`$PROJECT_NAME/settings_file/settings.toml\`
 - Contains default configuration values
 - Uses Jinja2 templating inside Dynaconf
-- Includes logger_name and base_data_path which use the environment prefix.
+- Includes \`logger_name\` which is set to the project root name
 
 Example:
 \`\`\`
 [default]
+now_iso = "@jinja {{this._get_now_iso(this.tz)}}"
+start_ts = "@jinja {{this._get_start_ts(this.tz)}}"
 tz = "Asia/Kolkata"
 logger_name = "$PROJECT_NAME"
 base_data_path = "@jinja {{this.home_dir}}/Data/$ENV_PREFIX"
 \`\`\`
 
 If an AI agent needs to modify configuration behavior, it should edit:
-- \`omniconf.py\` for logic or environment variable handling
-- \`settings.toml\` for changing configuration defaults
+- \`$PROJECT_NAME/omniconf.py\` for logic or environment variable handling
+- \`$PROJECT_NAME/settings_file/settings.toml\` for changing configuration defaults
 
 ## 🔧 Extending the Project
-- Add new settings in \`settings_file/settings.toml\`
+- Add new settings in \`$PROJECT_NAME/settings_file/settings.toml\`
 - Add new Python modules inside \`$PROJECT_NAME/\`
 - Add tests inside \`tests/\`
 EOF
