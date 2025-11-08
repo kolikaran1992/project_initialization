@@ -8,7 +8,8 @@ set -e
 
 # STEP 0 — Get project name from current folder
 PROJECT_NAME=$(basename "$PWD")
-echo "Initializing project: $PROJECT_NAME"
+ENV_PREFIX=$(echo "$PROJECT_NAME" | tr '[:lower:]' '[:upper:]')
+echo "Initializing project: $PROJECT_NAME (ENV prefix: $ENV_PREFIX)"
 
 # STEP 1 — Initialize Poetry project
 echo "Running poetry init..."
@@ -68,12 +69,18 @@ def _get_now_ts(tz: str) -> str:
 # Create Settings #
 ###################
 secrets_dir = os.environ.get("SECRETS_DIRECTORY") or ""
+
+# Automatically detect .toml config files (excluding settings.toml)
+settings_files = [
+    path.as_posix() for path in _BASE_DIR.glob("*.toml") if path.stem != "settings"
+]
+
 config = Dynaconf(
     preload=[_BASE_DIR.joinpath("settings_file", "settings.toml").as_posix()],
-    settings_files=[],
+    settings_files=settings_files,
     secrets=[] if not secrets_dir else list(Path(secrets_dir).glob("*.toml")),
     environments=True,
-    envvar_prefix="EXP_BASE",
+    envvar_prefix="${ENV_PREFIX}",
     load_dotenv=True,
     _get_now_ts=_get_now_ts,
     _get_now_iso=_get_now_iso,
