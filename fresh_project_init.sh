@@ -72,7 +72,7 @@ secrets_dir = os.environ.get("SECRETS_DIRECTORY") or ""
 
 # Automatically detect .toml config files (excluding settings.toml)
 settings_files = [
-    path.as_posix() for path in _BASE_DIR.glob("*.toml") if path.stem != "settings"
+    path.as_posix() for path in _BASE_DIR.joinpath('settings_file').glob("*.toml") if path.stem != "settings"
 ]
 
 config = Dynaconf(
