@@ -135,9 +135,9 @@ base_data_path = "@jinja {{this.home_dir}}/Data/$ENV_PREFIX"
 EOF
 
 
-# STEP 7 — Create agent.md in project root
-echo "Creating agent.md..."
-cat <<EOF > agent.md
+# STEP 7 — Create agent.md inside project directory
+echo "Creating $PROJECT_NAME/agent.md..."
+cat <<EOF > "$PROJECT_NAME/agent.md"
 # Project Overview
 
 This project is an auto-initialized Python template managed by Poetry.
@@ -148,16 +148,17 @@ It provides a clean structure for configuration management using Dynaconf, along
 \`\`\`
 project_root/
 │
-├── pyproject.toml               # Poetry configuration & dependencies
-├── README.md                    # Project documentation
+├── pyproject.toml # Poetry configuration & dependencies
+├── README.md # Project documentation
 │
-├── $PROJECT_NAME/               # Main Python package
-│   ├── __init__.py
-│   ├── omniconf.py              # Base configuration loader using Dynaconf
-│   └── settings_file/           # Dynaconf settings directory
-│       └── settings.toml        # Default configuration
+├── $PROJECT_NAME/ # Main Python package
+│ ├── init.py
+│ ├── agent.md # instructions for agents to augment the project
+│ ├── omniconf.py # Base configuration loader using Dynaconf
+│ └── settings_file/ # Dynaconf settings directory
+│     └── settings.toml # Default configuration
 │
-└── tests/                       # Unit tests directory
+└── tests/ # Unit tests directory
 \`\`\`
 
 ## ✅ What Each File Does
