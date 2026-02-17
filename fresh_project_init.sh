@@ -13,7 +13,7 @@ echo "Initializing project: $PROJECT_NAME (ENV prefix: $ENV_PREFIX)"
 
 # STEP 1 — Initialize Poetry project
 echo "Running poetry init..."
-poetry init --name "$PROJECT_NAME" --author "kolikaran" --no-interaction
+poetry init --name "$PROJECT_NAME" --author "kolikaran" --python ">=3.10,<3.15" --no-interaction
 
 # STEP 2 — Create basic structure
 echo "Creating $PROJECT_NAME and tests..."
