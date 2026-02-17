@@ -33,10 +33,14 @@ EOF
 echo "Installing main dependencies..."
 poetry add dynaconf jinja2 pytz
 
-echo "Installing development tools (pytest, black, isort)..."
-poetry add pytest
-poetry add black --dev
-poetry add isort --dev
+echo "Installing development tools (pytest, black, isort, ipykernel, ipywidgets)..."
+
+poetry add --group dev pytest
+poetry add --group dev black
+poetry add --group dev isort
+poetry add --group dev ipykernel
+poetry add --group dev ipywidgets
+
 
 # STEP 5 — Create omniconf.py inside the project folder
 echo "Creating $PROJECT_NAME/omniconf.py..."
