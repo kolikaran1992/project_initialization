@@ -32,6 +32,7 @@ EOF
 # STEP 4 — Install dependencies
 echo "Installing main dependencies..."
 poetry add dynaconf jinja2 pytz
+poetry add python-json-logger
 
 echo "Installing development tools (pytest, black, isort, ipykernel, ipywidgets)..."
 
@@ -124,6 +125,48 @@ stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logger.level)
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
+
+
+#########################
+# Optional Loki Handler #
+#########################
+def add_loki_handler(suffix: str | None = None):
+    """
+    Attach a JSON FileHandler for Loki ingestion.
+    Loki is NOT enabled by default.
+    """
+
+    from pythonjsonlogger import jsonlogger
+
+    project_name = config.logger_name
+
+    if suffix:
+        job = f"{project_name}__{suffix}"
+        filename = f"loki_{project_name}__{suffix}.log"
+    else:
+        job = f"{project_name}"
+        filename = f"loki_{project_name}.log"
+
+    base_path = Path(config.loki_log_path)
+    log_dir = base_path.parent
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    final_path = log_dir / filename
+
+    # Prevent duplicate Loki handlers
+    for handler in logger.handlers:
+        if isinstance(handler, logging.FileHandler) and Path(handler.baseFilename) == final_path:
+            return
+
+    file_handler = logging.FileHandler(final_path)
+    file_handler.setLevel(logger.level)
+
+    json_formatter = jsonlogger.JsonFormatter(
+        "%(asctime)s %(levelname)s %(name)s %(message)s"
+    )
+
+    file_handler.setFormatter(json_formatter)
+    logger.addHandler(file_handler)
 EOF
 
 # STEP 6 — Create settings_file inside project directory
@@ -136,6 +179,7 @@ start_ts = "@jinja {{this._get_start_ts(this.tz)}}"
 tz = "Asia/Kolkata"
 logger_name = "$PROJECT_NAME"
 base_data_path = "@jinja {{this.home_dir}}/Data/$ENV_PREFIX"
+loki_log_path = "@jinja {{this.base_data_path}}/logs/loki_${PROJECT_NAME}.log"
 EOF
 
 
@@ -204,6 +248,58 @@ If an AI agent needs to modify configuration behavior, it should edit:
 - Add new settings in \`$PROJECT_NAME/settings_file/settings.toml\`
 - Add new Python modules inside \`$PROJECT_NAME/\`
 - Add tests inside \`tests/\`
+
+---
+
+## 🧾 Optional Loki Logging
+
+Loki logging is **disabled by default**.
+
+To enable Loki logging, call:
+
+\`\`\`python
+from $PROJECT_NAME.omniconf import add_loki_handler
+add_loki_handler()
+\`\`\`
+
+### ✅ Without suffix
+
+\`\`\`python
+add_loki_handler()
+\`\`\`
+
+- Job name becomes: \`$PROJECT_NAME\`
+- File created:
+  \`<base_data_path>/logs/loki_$PROJECT_NAME.log\`
+
+### ✅ With suffix
+
+\`\`\`python
+add_loki_handler("ingestion")
+\`\`\`
+
+- Job name becomes:
+  \`$PROJECT_NAME__ingestion\`
+- File created:
+  \`<base_data_path>/logs/loki_$PROJECT_NAME__ingestion.log\`
+
+### 📂 Log Location
+
+Log files are written to:
+
+\`\`\`
+{{base_data_path}}/logs/
+\`\`\`
+
+The base path is controlled by:
+
+\`\`\`
+loki_log_path
+\`\`\`
+
+inside \`settings.toml\`.
+
+The console logger remains unchanged.
 EOF
 
 
