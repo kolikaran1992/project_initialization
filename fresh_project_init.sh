@@ -31,7 +31,7 @@ EOF
 
 # STEP 4 — Install dependencies
 echo "Installing main dependencies..."
-poetry add dynaconf jinja2 pytz
+poetry add dynaconf jinja2 pytz rich
 poetry add python-json-logger
 
 echo "Installing development tools (pytest, black, isort, ipykernel, ipywidgets)..."
@@ -52,6 +52,7 @@ import os
 import pytz
 import logging
 from dynaconf import Dynaconf
+from rich.logging import RichHandler
 
 
 _NOW = datetime.now()
@@ -121,11 +122,16 @@ logger.setLevel(logging.INFO)
 fmt = "[%(asctime)s] %(levelname)s [%(full_path)s]: %(message)s"
 formatter = DefaultFormatter(fmt=fmt)
 
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logger.level)
-stream_handler.setFormatter(formatter)
-logger.addHandler(stream_handler)
+rich_handler = RichHandler(
+    level=logger.level,
+    rich_tracebacks=True,
+    markup=True,
+    log_time_format=lambda log_time: log_time.astimezone(
+        pytz.timezone(config.get("tz"))
+    ).strftime("[%X]"),
+)
 
+logger.addHandler(rich_handler)
 
 #########################
 # Optional Loki Handler #
